@@ -9,84 +9,86 @@ import com.tahugame.screens.GameScreen;
 public class EnemyHorizontal {
     private Texture texture;
     private float x, y;
-    private int hp = 15;
-    private int act = 0;
-    private GameScreen screen;
+    private float width, height;
+    private int hp;
+    private int timer = 0;
     private boolean remove = false;
-    private int direction = 1;
+    private GameScreen screen;
+    private int direction = 1; // 1 for right, -1 for left
+    private float speed = 3;
 
     public EnemyHorizontal(GameScreen screen, float x, float y) {
         this.screen = screen;
         this.x = x;
         this.y = y;
+
         texture = new Texture("images/Enemy.png");
+        width = texture.getWidth();
+        height = texture.getHeight();
+
+        hp = 20 + GameScreen.stageLevel * 5;
     }
 
     public void update(float delta) {
         if (GameScreen.paused || GameScreen.freeze) return;
 
-        act++;
+        timer++;
 
-        // Horizontal movement - lebih cepat di Stage 4
-        float speed = 3f;
+        // Move horizontally
         x += direction * speed;
 
-        if (x < 50 || x > TahuGame.GAME_WIDTH - 50) {
-            direction *= -1;
+        if (x <= 40) {
+            direction = 1;
+            x = 40;
+        }
+        if (x >= TahuGame.GAME_WIDTH - 40) {
+            direction = -1;
+            x = TahuGame.GAME_WIDTH - 40;
         }
 
-        // Stage 4: Shoot lebih sering
-        if (act % 25 == 0) {  // Lebih cepat dari 40
+        // Shoot patterns
+        if (timer % 20 == 0) {
             shootWave();
         }
 
-        if (act % 35 == 0) {  // Lebih cepat dari 60
-            shootSpiral();
-        }
-
-        // Stage 4: Tambahan aimed shots
-        if (act % 45 == 0) {
-            shootAtPlayer();
+        if (timer % 45 == 0) {
+            shootAimed();
         }
     }
 
     private void shootWave() {
-        // Wave pattern menuju player - 7 bullets
-        for (int i = 0; i < 7; i++) {
-            float angle = -90 + (i - 3) * 15;  // Spread dari -45 to +45 degrees
+        int bullets = 12;
+        int speed = 5 + GameScreen.bulletSpeedScale();
+
+        if (GameScreen.stageLevel == 4) speed = 5;
+
+        for (int i = 0; i < bullets; i++) {
+            int angle = (i * 30) + (int) (Math.sin(timer * 0.1) * 45);
+            screen.addEnemyBullet(new EnemyBullet(x, y, angle, speed));
+        }
+    }
+
+    private void shootAimed() {
+        for (int i = 0; i < 8; i++) {
+            double angle = (360.0 / 8) * i + timer * 2;
             double rad = Math.toRadians(angle);
-            float speed = 4;
+
+            // Stage 4: Bullet lebih cepat
+            float speed = 2.5f;
+            if (GameScreen.stageLevel == 4) speed = 4f;
+
             float vx = (float) Math.cos(rad) * speed;
             float vy = (float) Math.sin(rad) * speed;
             screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
         }
     }
 
-    private void shootSpiral() {
-        // Spiral pattern - 8 bullets
-        for (int i = 0; i < 8; i++) {
-            double angle = (360.0 / 8) * i + act * 3;
-            double rad = Math.toRadians(angle);
-            float vx = (float) Math.cos(rad) * 3;
-            float vy = (float) Math.sin(rad) * 3;
-            screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
-        }
+    public void render(SpriteBatch batch) {
+        batch.draw(texture, x - width / 2, y - height / 2, width, height);
     }
 
-    private void shootAtPlayer() {
-        float px = screen.getPlayer().getX();
-        float py = screen.getPlayer().getY();
-
-        double angle = Math.atan2(py - y, px - x);
-
-        // Shoot 5 bullets spread
-        for (int i = 0; i < 5; i++) {
-            double spreadAngle = angle + Math.toRadians((i - 2) * 10);
-            float speed = 5;
-            float vx = (float) Math.cos(spreadAngle) * speed;
-            float vy = (float) Math.sin(spreadAngle) * speed;
-            screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
-        }
+    public Rectangle getBounds() {
+        return new Rectangle(x - width / 2, y - height / 2, width, height);
     }
 
     public void hit() {
@@ -100,11 +102,7 @@ public class EnemyHorizontal {
         return remove;
     }
 
-    public void render(SpriteBatch batch) {
-        batch.draw(texture, x - texture.getWidth() / 2, y - texture.getHeight() / 2);
-    }
-
-    public Rectangle getBounds() {
-        return new Rectangle(x - 20, y - 20, 40, 40);
+    public void dispose() {
+        texture.dispose();
     }
 }

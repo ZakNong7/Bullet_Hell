@@ -8,77 +8,75 @@ import com.tahugame.screens.GameScreen;
 public class Enemy {
     private Texture texture;
     private float x, y;
-    private int hp = 10;
-    private int act = 0;
-    private GameScreen screen;
+    private float width, height;
+    private int hp;
+    private int timer = 0;
     private boolean remove = false;
+    private GameScreen screen;
 
     public Enemy(GameScreen screen, float x, float y) {
         this.screen = screen;
         this.x = x;
         this.y = y;
+
         texture = new Texture("images/Enemy.png");
+        width = texture.getWidth();
+        height = texture.getHeight();
+
+        hp = 25;
     }
 
     public void update(float delta) {
         if (GameScreen.paused || GameScreen.freeze) return;
 
-        act++;
+        timer++;
 
-        // Stage 3: Lebih aggresive!
-        int shootInterval = GameScreen.stageLevel >= 3 ? 30 : 50;  // Stage 3 lebih cepat
-
-        if (act % shootInterval == 0) {
+        // Shoot pattern based on stage level
+        if (timer % 30 == 0) {
             shootCircle();
         }
 
-        if (act % 80 == 40) {
-            shootAtPlayer();
-        }
-
-        // Stage 3: Tambahan wave pattern
-        if (GameScreen.stageLevel >= 3 && act % 60 == 0) {
-            shootWave();
+        if (GameScreen.stageLevel >= 2 && timer % 60 == 0) {
+            shootAimed();
         }
     }
 
     private void shootCircle() {
-        int bulletCount = GameScreen.stageLevel >= 3 ? 16 : 12;  // Stage 3: 16 bullets
+        int bullets = 8 + GameScreen.stageLevel * 2;
+        int speed = 4 + GameScreen.bulletSpeedScale();
 
-        for (int i = 0; i < bulletCount; i++) {
-            double angle = (360.0 / bulletCount) * i + act;
-            double rad = Math.toRadians(angle);
-            float vx = (float) Math.cos(rad) * 3;
-            float vy = (float) Math.sin(rad) * 3;
-            screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
+        float baseSpeed = 3;
+        if (GameScreen.stageLevel == 3) baseSpeed = 4.5f;
+        if (GameScreen.stageLevel == 4) baseSpeed = 5f;
+
+
+        for (int i = 0; i < bullets; i++) {
+            int angle = (i * 360 / bullets) + timer;
+            screen.addEnemyBullet(new EnemyBullet(x, y, angle, speed));
         }
     }
 
-    private void shootAtPlayer() {
+    private void shootAimed() {
         float px = screen.getPlayer().getX();
         float py = screen.getPlayer().getY();
 
         double angle = Math.atan2(py - y, px - x);
 
-        // Stage 3: Shoot 3 bullets in spread pattern
-        int spreadCount = GameScreen.stageLevel >= 3 ? 3 : 1;
+        // Stage 3 & 4: Bullet lebih cepat
+        float speed = 4 + GameScreen.bulletSpeedScale();
+        if (GameScreen.stageLevel >= 3) speed += 1.5f;
 
-        for (int i = 0; i < spreadCount; i++) {
-            double spreadAngle = angle + Math.toRadians((i - 1) * 15);  // -15, 0, +15 degrees
-            float speed = 4 + GameScreen.bulletSpeedScale();
-            float vx = (float) Math.cos(spreadAngle) * speed;
-            float vy = (float) Math.sin(spreadAngle) * speed;
-            screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
-        }
+        float vx = (float) Math.cos(angle) * speed;
+        float vy = (float) Math.sin(angle) * speed;
+        screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
     }
 
-    private void shootWave() {
-        // Wave pattern - bullets bergerak horizontal
-        for (int i = 0; i < 5; i++) {
-            float vx = -2 + i * 1;  // -2, -1, 0, 1, 2
-            float vy = -3;
-            screen.addEnemyBullet(new EnemyBullet(x, y, vx, vy));
-        }
+    public void render(SpriteBatch batch) {
+        batch.draw(texture, x - width / 2, y - height / 2, width, height);
+    }
+
+    public Rectangle getBounds() {
+        return new Rectangle(x - width / 2, y - height / 2, width, height);
     }
 
     public void hit() {
@@ -92,11 +90,7 @@ public class Enemy {
         return remove;
     }
 
-    public void render(SpriteBatch batch) {
-        batch.draw(texture, x - texture.getWidth() / 2, y - texture.getHeight() / 2);
-    }
-
-    public Rectangle getBounds() {
-        return new Rectangle(x - 20, y - 20, 40, 40);
+    public void dispose() {
+        texture.dispose();
     }
 }

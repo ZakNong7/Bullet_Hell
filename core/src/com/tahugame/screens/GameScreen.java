@@ -56,7 +56,11 @@ public class GameScreen extends BaseScreen {
     private ScreenShake screenShake;
     
     private boolean slowFromButton = false;
-    
+    private boolean showingRecovery = false;
+    private int recoveryTimer = 0;
+    private int recoveryAmount = 0;
+
+
     public GameScreen(TahuGame game) {
         super(game);
 
@@ -198,6 +202,27 @@ public class GameScreen extends BaseScreen {
                 batch.draw(menuButtonTex, menuButtonBounds.x, menuButtonBounds.y,
                         menuButtonBounds.width, menuButtonBounds.height);
             }
+            if (showingRecovery) {
+                recoveryTimer++;
+                String recoveryText = "HP RECOVERED +" + recoveryAmount;
+                layout.setText(font, recoveryText);
+
+                // Text fade out effect
+                float alpha = 1f - (recoveryTimer / 120f);
+                if (alpha < 0) alpha = 0;
+                font.setColor(0f, 1f, 0f, alpha);  // Green color with fade
+
+                font.draw(batch, recoveryText,
+                        (TahuGame.GAME_WIDTH - layout.width) / 2,
+                        TahuGame.GAME_HEIGHT / 2 - 50);
+
+                font.setColor(1f, 1f, 1f, 1f);  // Reset color
+
+                if (recoveryTimer >= 120) {  // 2 seconds
+                    showingRecovery = false;
+                    recoveryTimer = 0;
+                }
+            }
         }
 
         batch.end();
@@ -244,7 +269,11 @@ public class GameScreen extends BaseScreen {
                 int recoverAmount = stageLevel * 5;
                 playerHealth += recoverAmount;
                 if (playerHealth > 100) playerHealth = 100;
-                
+
+                recoveryAmount = recoverAmount;
+                showingRecovery = true;
+                recoveryTimer = 0;
+
                 level++;
                 
                 if (level > 5) {
@@ -329,14 +358,16 @@ public class GameScreen extends BaseScreen {
             }
         }
     }
-    
+
     private void handleInput() {
+        // Enable multi-touch input
+        Gdx.input.setInputProcessor(null);
+
         if (Gdx.input.justTouched()) {
-            // CRITICAL FIX: Use viewport.unproject
             Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            
+
             Gdx.app.log("GAME", "Touch: " + (int)touch.x + "," + (int)touch.y);
-            
+
             if (pauseButtonBounds.contains(touch.x, touch.y)) {
                 Gdx.app.log("GAME", "PAUSE");
                 togglePause();
@@ -353,10 +384,22 @@ public class GameScreen extends BaseScreen {
                 }
             }
         }
-        
-        if (!paused && Gdx.input.isTouched()) {
-            Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            slowFromButton = slowButtonBounds.contains(touch.x, touch.y);
+
+        // Check multi-touch untuk slow button - support simultaneous input
+        if (!paused) {
+            slowFromButton = false;
+
+            // Loop through ALL touch pointers (multi-touch support)
+            for (int i = 0; i < 5; i++) {  // Support sampai 5 fingers
+                if (Gdx.input.isTouched(i)) {  // Check each pointer
+                    Vector2 touch = viewport.unproject(new Vector2(Gdx.input.getX(i), Gdx.input.getY(i)));
+
+                    if (slowButtonBounds.contains(touch.x, touch.y)) {
+                        slowFromButton = true;
+                        break;  // Kalau ada 1 finger di slow button, cukup
+                    }
+                }
+            }
         } else {
             slowFromButton = false;
         }

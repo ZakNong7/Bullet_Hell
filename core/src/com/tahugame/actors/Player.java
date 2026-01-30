@@ -57,7 +57,7 @@ public class Player {
 
         shootDelay++;
 
-        int rate = GameScreen.slow ? 20 : 10;
+        int rate = GameScreen.slow ? 20 : 15;
         if (shootDelay % rate == 2) {
             screen.addPlayerBullet(new PlayerBullet(x, y + 20));
         }

@@ -16,7 +16,7 @@ public class CreditScreen extends BaseScreen {
     public CreditScreen(TahuGame game) {
         super(game);
 
-        background = new Texture("images/credit-bg.png");
+        background = new Texture("images/credit+bg.png");
         backButton = new Texture("images/menu-btn.png");
         debugFont = new BitmapFont();
 

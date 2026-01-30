@@ -14,6 +14,15 @@ public class EnemyBullet {
     private float speedX, speedY;
     private boolean remove = false;
 
+    public EnemyBullet(float x, float y, int angle, int speed) {
+        this.x = x;
+        this.y = y;
+
+        double radians = Math.toRadians(angle);
+        speedX = (float) (Math.cos(radians) * speed);
+        speedY = (float) (Math.sin(radians) * speed);
+    }
+
     public EnemyBullet(float x, float y, float speedX, float speedY) {
         this.x = x;
         this.y = y;

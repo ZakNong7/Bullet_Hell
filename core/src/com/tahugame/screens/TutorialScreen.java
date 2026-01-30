@@ -16,7 +16,7 @@ public class TutorialScreen extends BaseScreen {
     public TutorialScreen(TahuGame game) {
         super(game);
 
-        background = new Texture("images/cara_main-bg.png");
+        background = new Texture("images/tutorial-bg.png");
         backButton = new Texture("images/menu-btn.png");
         debugFont = new BitmapFont();
 
