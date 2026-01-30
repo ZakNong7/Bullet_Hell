@@ -76,7 +76,7 @@ Project ini di-port dari Greenfoot game untuk pembelajaran.
 
 - Original Greenfoot version: Ahmad Zakky Nurfauzan
 - Android port menggunakan LibGDX framework
-- Assets: pixabay: DJLofi, Backgroundmusicmaster, jakob_welik
+- Assets: pixabay: DJLofi, Backgroundmusicmaster, jakob_welik (Sounds), AI Generated, Canva
 
 ---
 
