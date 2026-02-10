@@ -1,4 +1,4 @@
-# Tahu Game - Android Port
+# Bullet Hell - Android Port
 
 Game bullet hell shooter yang di-port dari Greenfoot ke Android menggunakan LibGDX framework.
 
